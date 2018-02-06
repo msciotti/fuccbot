@@ -8,7 +8,7 @@ client.on('ready', () => {
 });
 
 client.on('message', message => {
-  searchForAyy(message);  
+  searchForAyy(message);
   searchForCommand(message);
 });
 
@@ -20,25 +20,23 @@ function PickAnAyy() {
   return ayys[randomNumber];
 }
 
-function searchForAyy(message){
-  if (message.content.includes('ayy')) {
+function searchForAyy(message) {
+  if (message.content.toLower().includes('ayy')) {
     message.channel.send(PickAnAyy());
   }
 }
 
-function searchForCommand(message){
+function searchForCommand(message) {
   const re = /(?:^|[ ])!([a-zA-Z]+)/gm;
   let m;
-  while((m = re.exec(message.content)) != null){
-    if(m.index === re.lastIndex){
+  while ((m = re.exec(message.content)) != null) {
+    if (m.index === re.lastIndex) {
       re.lastIndex++;
     }
-    for(var i = 0, len = m.length; i < len; i++){
+    for (var i = 0, len = m.length; i < len; i++) {
       var text = m[i].toLowerCase();
       var command = text.trim();
       message.channel.send(textCommands[command]);
     }
   }
 }
-
-
