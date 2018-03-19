@@ -35,6 +35,16 @@ function searchForCommand(message) {
     }
     let text = m[0].toLowerCase();
     let command = text.trim();
+    if (command === '!mtg') {
+      findMagicCard(message);
+      return;
+    }
     message.channel.send(textCommands[command]);
   }
+}
+
+function findMagicCard(message) {
+  const text = message.content.split('!mtg ');
+  const card = text[1].replace(/ /g, '+');
+  message.channel.send(`https://api.scryfall.com/cards/named?exact=${card}&format=image`);
 }
