@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const fetch = require('snekfetch');
 const Settings = require('./settings.json');
 const textCommands = require('./textcommands.json');
 const client = new Discord.Client();
@@ -46,5 +47,17 @@ function searchForCommand(message) {
 function findMagicCard(message) {
   const text = message.content.split('!mtg ');
   const card = text[1].replace(/ /g, '+');
-  message.channel.send(`https://api.scryfall.com/cards/named?exact=${card}&format=image`);
+  fetch.get(`https://magiccards.info/query?q=${card}&v=card&s=cname`).then(r => {
+    const page = r.body.toString('utf8');
+    const imageUrl = page.match('/scans/en/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*.jpg')[0];
+    message.channel.send({
+      files: [
+        {
+          attachment: `https://magiccards.info${imageUrl}`,
+          name: 'card.jpg',
+        },
+      ],
+    });
+  });
+  return;
 }
