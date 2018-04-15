@@ -15,6 +15,14 @@ client.on('message', message => {
   searchForCommand(message);
 });
 
+client.on('error', error => {
+  console.log(error.message);
+});
+
+client.on('disconnect', event => {
+  console.log(event.code);
+});
+
 function searchForAyy(message) {
   if (message.content.toLowerCase().includes('ayy')) {
     message.channel.send(PickAnAyy());
