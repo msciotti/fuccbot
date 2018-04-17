@@ -30,7 +30,7 @@ function searchForAyy(message) {
 }
 
 function PickAnAyy() {
-  let ayys = ['lmao', 'macarena', 'esse', '<:Jebaited:297176518268813314>'];
+  let ayys = ['lmao', 'macarena', 'esse', '<:Jebaited:297176518268813314>', 'jis'];
   let randomNumber = Math.floor(Math.random() * ayys.length);
   return ayys[randomNumber];
 }
