@@ -3,24 +3,20 @@ const fetch = require('snekfetch');
 const Settings = require('./settings.json');
 const textCommands = require('./textcommands.json');
 const client = new Discord.Client();
+const sqlite3 = require('sqlite3');
+let db;
 
 client.login(Settings.BOT_TOKEN);
 
 client.on('ready', () => {
-  console.log('I am ready!');
+  db = new sqlite3.Database('../dbs/my.db', sqlite3.OPEN_READWRITE, e => {
+    e ? console.log(e.message) : console.log('Connected to db');
+  });
 });
 
 client.on('message', message => {
   searchForAyy(message);
   searchForCommand(message);
-});
-
-client.on('error', error => {
-  console.log(error.message);
-});
-
-client.on('disconnect', event => {
-  console.log(event.code);
 });
 
 function searchForAyy(message) {
@@ -53,19 +49,45 @@ function searchForCommand(message) {
 }
 
 function findMagicCard(message) {
-  const text = message.content.split('!mtg ');
-  const card = text[1].replace(/ /g, '+');
-  fetch.get(`https://magiccards.info/query?q=${card}&v=card&s=cname`).then(r => {
+  const name = message.content.split('!mtg ')[1];
+  db.get(
+    'select card_url, card_name from mtgcards where card_name=$name',
+    {
+      $name: name,
+    },
+    (e, row) => {
+      let card;
+      if (row == null) {
+        const url = getCard(name, url => {
+          db.run(
+            'insert into mtgcards values($url, $name)',
+            {
+              $url: url,
+              $name: name,
+            },
+            () => {
+              sendImage(message.channel, url);
+            }
+          );
+        });
+      } else {
+        sendImage(message.channel, row.card_url);
+      }
+    }
+  );
+}
+
+function getCard(name, callback) {
+  const query = name.replace(/ /g, '+');
+  fetch.get(`https://magiccards.info/query?q=${query}&v=card&s=cname`).then(r => {
     const page = r.body.toString('utf8');
-    const imageUrl = page.match('/scans/en/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*.jpg')[0];
-    message.channel.send({
-      files: [
-        {
-          attachment: `https://magiccards.info${imageUrl}`,
-          name: 'card.jpg',
-        },
-      ],
-    });
+    const imageUrl = page.match('scans/en/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*.jpg')[0];
+    callback(`https://magiccards.info/${imageUrl}`);
   });
-  return;
+}
+
+function sendImage(channel, attachment) {
+  channel.send({
+    files: [attachment],
+  });
 }
