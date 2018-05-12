@@ -54,6 +54,10 @@ function searchForCommand(message) {
 
 function findMagicCard(message) {
   const name = message.content.split('!mtg ')[1];
+  if (name == null) {
+    return;
+  }
+
   db.get(
     'select card_url, card_name from mtgcards where card_name=$name',
     {
