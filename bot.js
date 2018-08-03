@@ -16,6 +16,7 @@ client.on('ready', () => {
 
 client.on('message', message => {
   searchForAyy(message);
+  searchForMagicCard(message);
   searchForCommand(message);
 });
 
@@ -44,58 +45,57 @@ function searchForCommand(message) {
     }
     let text = m[0].toLowerCase();
     let command = text.trim();
-    if (command === '!mtg') {
-      findMagicCard(message);
-      return;
-    }
     message.channel.send(textCommands[command]);
   }
 }
 
-function findMagicCard(message) {
-  const name = message.content.split('!mtg ')[1];
-  if (name == null) {
-    return;
-  }
-
-  db.get(
-    'select card_url, card_name from mtgcards where card_name=$name',
-    {
-      $name: name,
-    },
-    (e, row) => {
-      let card;
-      if (row == null) {
-        const url = getCard(name, url => {
-          db.run(
-            'insert into mtgcards values($url, $name)',
-            {
-              $url: url,
-              $name: name,
-            },
-            () => {
-              sendImage(message.channel, url);
-            }
-          );
-        });
-      } else {
-        sendImage(message.channel, row.card_url);
+function searchForMagicCard(message) {
+  const regex = /(?:\[\[(([a-zA-Z]+\s*)+)\]\])/g;
+  while ((m = regex.exec(message.content)) != null) {
+    var name = m[1];
+    db.get(
+      'select card_url, card_name from mtgcards where card_name=$name',
+      {
+        $name: name,
+      },
+      (e, row) => {
+        if (row == null) {
+          getCard(name, url => {
+            db.run(
+              'insert into mtgcards values($url, $name)',
+              {
+                $url: url,
+                $name: name,
+              },
+              () => {
+                sendImage(message.channel, url);
+              }
+            );
+          });
+        } else {
+          sendImage(message.channel, row.card_url);
+        }
       }
-    }
-  );
+    );
+  }
 }
 
 function getCard(name, callback) {
   const query = name.replace(/ /g, '+');
-  fetch.get(`https://magiccards.info/query?q=${query}&v=card&s=cname`).then(r => {
-    const page = r.body.toString('utf8');
-    const imageUrl = page.match('scans/en/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*.jpg')[0];
-    callback(`https://magiccards.info/${imageUrl}`);
+  fetch.get(`https://api.scryfall.com/cards/named?fuzzy=${query}`).then(r => {
+    if (r.body['object'] === 'card') {
+      var imageUrl = r.body['image_uris']['border_crop'];
+      callback(imageUrl);
+    } else {
+      return;
+    }
   });
 }
 
 function sendImage(channel, attachment) {
-  channel.send({
-    files: [attachment],
+  fetch.get(attachment).then(r => {
+    channel.send({
+      files: [r.body],
+    });
   });
 }
