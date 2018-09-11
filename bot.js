@@ -37,6 +37,10 @@ function PickAnAyy() {
 }
 
 function searchForCommand(message) {
+  if (message.content === '@pigeon') {
+    message.channel.send('Fuck you.');
+  }
+
   const re = /(?:^|[ ])!([a-zA-Z]+)/gm;
   let m;
   while ((m = re.exec(message.content)) != null) {
