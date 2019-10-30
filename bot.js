@@ -41,6 +41,11 @@ function searchForCommand(message) {
     message.channel.send('Fuck you.');
   }
 
+  if (message.content.includes('!jumbo')) {
+    createJumboji(message);
+    return;
+  }
+
   const re = /(?:^|[ ])!([a-zA-Z]+)/gm;
   let m;
   while ((m = re.exec(message.content)) != null) {
@@ -99,6 +104,24 @@ function getCard(name, callback) {
 function sendImage(channel, attachment) {
   fetch.get(attachment).then(r => {
     channel.send({
+      files: [r.body],
+    });
+  });
+}
+
+function createJumboji(message) {
+  const emoji_re = /[(a?):(.+):]([0-9]+)/;
+  const parts = message.content.split(' ');
+  const emoji = parts[1];
+
+  let m = emoji_re.exec(message.content);
+  m.index === emoji_re.lastIndex;
+  let text = m[0].toLowerCase();
+  text = text.trim().split(':')[1];
+  const url = `https://cdn.discordapp.com/emojis/${text}.png?size=1024`;
+
+  fetch.get(url).then(r => {
+    message.channel.send({
       files: [r.body],
     });
   });
