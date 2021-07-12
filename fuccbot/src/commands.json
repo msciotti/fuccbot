@@ -1,0 +1,14 @@
+[
+    {
+        "name": "cardsearch",
+        "description": "Search for a Magic: the Gathering card",
+        "options": [
+            {
+                "name": "name",
+                "description": "The name of the card",
+                "value": "card_name",
+                "required": true
+            }
+        ]
+    }
+]
